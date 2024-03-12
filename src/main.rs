@@ -1,7 +1,7 @@
-mod api;
-mod consts;
 mod models;
-mod tests;
+mod request;
+mod test;
+mod utils;
 
 fn main() {
     println!("Hello, world!");
