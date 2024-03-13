@@ -5,7 +5,7 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::{
-    request::get_ids,
+    request::{get_ids, get_whisky_data},
     utils::{consts::TEST_REQUEST_RATE_LIMIT, funcs::get_url},
 };
 
@@ -53,7 +53,7 @@ async fn test_scraper() {
                         .and_then(|e| {
                             serde_json::from_str::<Value>(&e).wrap_err("Failed parsing json")
                         })
-                        .and_then(|val| Ok(get_ids(val)));
+                        .and_then(|val| Ok(get_ids(&client, i)));
 
                     if let Ok(f) = body {
                         if let Ok(ids) = f.await {
@@ -63,6 +63,22 @@ async fn test_scraper() {
                 }
             }
             Err(err) => panic!("Failed req: {:?}", err),
+        }
+    }
+}
+
+#[tokio::test]
+async fn test_whisky_getter() {
+    let client = Client::default();
+
+    if let Ok(mut ids) = get_ids(&client, 0).await {
+        if let Some(raw_id) = ids.pop() {
+            if let Ok(id) = raw_id.parse::<u32>() {
+                let whisky = get_whisky_data(&client, id).await;
+                assert!(whisky.is_ok());
+                let res = whisky.unwrap();
+                println!("{:?}", res);
+            }
         }
     }
 }

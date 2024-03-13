@@ -1,4 +1,4 @@
-use eyre::{Context, Result};
+use eyre::{Context, ContextCompat, Result};
 use reqwest::{Client, StatusCode};
 use serde_json::Value;
 
@@ -25,15 +25,22 @@ pub async fn fetch_page(client: &Client, page_nr: u32) -> Result<String> {
 ///     }
 /// }
 /// ```
-pub async fn get_ids(value: serde_json::Value) -> Result<Vec<String>> {
-    let mut res = Vec::new();
+pub async fn get_ids(client: &Client, page: u32) -> Result<Vec<String>> {
+    let request = client.get(get_url(page)).build()?;
 
-    for el in value["productSearchResult"]["products"].as_array().ok_or(
-        <serde_json::Error as serde::de::Error>::missing_field("field"),
-    )? {
-        res.push(el["code"].to_string().replace("\\", "").replace("\"", ""));
-    }
-    Ok(res)
+    serde_json::from_str::<Value>(&client.execute(request).await?.text().await?)
+        .wrap_err("Failed parsing")
+        .and_then(|val| {
+            val["productSearchResult"]["products"]
+                .as_array()
+                .wrap_err("Missing field on json")
+                .and_then(|vec| {
+                    Ok(vec
+                        .into_iter()
+                        .map(|id| id["code"].to_string().replace("\\", "").replace("\"", ""))
+                        .collect::<Vec<String>>())
+                })
+        })
 }
 
 pub async fn get_whisky_data(client: &Client, whisky: u32) -> Result<Whiskey> {
