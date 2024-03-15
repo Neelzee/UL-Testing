@@ -82,3 +82,10 @@ async fn test_whisky_getter() {
         }
     }
 }
+
+#[tokio::test]
+async fn test_ids() -> Result<()> {
+    let client = Client::default();
+
+    Ok(())
+}

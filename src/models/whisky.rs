@@ -4,14 +4,14 @@ use super::raw_whisky::RawWhisky;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Whiskey {
-    id: u32,
-    img: String,
-    percentage: u32,
-    price: f32,
-    rating: f32,
-    summary: String,
-    title: String,
-    volume: f32,
+    pub id: u32,
+    pub img: String,
+    pub percentage: u32,
+    pub price: f32,
+    pub rating: f32,
+    pub summary: String,
+    pub title: String,
+    pub volume: f32,
 }
 
 impl Whiskey {

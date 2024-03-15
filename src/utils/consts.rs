@@ -9,3 +9,5 @@ pub fn get_url(page_nr: u32) -> String {
 }
 
 pub const TEST_REQUEST_RATE_LIMIT: f32 = 0.5f32;
+
+pub const WHISKY_PAGE_COUNT: u32 = 52;

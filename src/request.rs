@@ -1,10 +1,15 @@
+use std::future::IntoFuture;
+
 use eyre::{Context, ContextCompat, Result};
 use reqwest::{Client, StatusCode};
 use serde_json::Value;
 
 use crate::{
     models::{raw_whisky::RawWhisky, whisky::Whiskey},
-    utils::{consts::get_url, funcs::get_data_url},
+    utils::{
+        consts::{get_url, WHISKY_PAGE_COUNT},
+        funcs::get_data_url,
+    },
 };
 
 pub async fn fetch_page(client: &Client, page_nr: u32) -> Result<String> {
@@ -66,4 +71,28 @@ pub async fn get_whisky_data(client: &Client, whisky: u32) -> Result<Whiskey> {
             return Err(err.into());
         }
     }
+}
+
+pub async fn get_all_whiskies() -> Result<Vec<Whiskey>> {
+    let client = Client::default();
+
+    let mut res = Vec::new();
+
+    for i in 0..WHISKY_PAGE_COUNT {
+        let ids = get_ids(&client, i)
+            .await
+            .wrap_err("Failed getting IDs")
+            .and_then(|raw_ids| {
+                Ok(raw_ids
+                    .into_iter()
+                    .filter_map(|s| s.parse::<u32>().ok())
+                    .collect::<Vec<u32>>())
+            })?;
+
+        for id in ids {
+            res.push(get_whisky_data(&client, id).await?);
+        }
+    }
+
+    Ok(res)
 }
