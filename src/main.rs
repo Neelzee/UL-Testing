@@ -6,7 +6,6 @@ use std::{
 use eyre::Result;
 use request::get_all_whiskies;
 
-mod models;
 mod request;
 mod test;
 mod utils;

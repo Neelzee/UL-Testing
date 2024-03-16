@@ -4,13 +4,11 @@ use eyre::{Context, ContextCompat, Result};
 use reqwest::{Client, StatusCode};
 use serde_json::Value;
 
-use crate::{
-    models::{raw_whisky::RawWhisky, whisky::Whiskey},
-    utils::{
-        consts::{get_url, WHISKY_PAGE_COUNT},
-        funcs::get_data_url,
-    },
+use crate::utils::{
+    consts::{get_url, WHISKY_PAGE_COUNT},
+    funcs::get_data_url,
 };
+use ua_rlib::models::{raw_whisky::RawWhisky, whisky::Whiskey};
 
 pub async fn fetch_page(client: &Client, page_nr: u32) -> Result<String> {
     Ok(client.get(get_url(page_nr)).send().await?.text().await?)

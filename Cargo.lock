@@ -928,6 +928,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e421abadd41a4225275504ea4d6566923418b7f05506fbc9c0fe86ba7396114b"
 
 [[package]]
+name = "ua-rlib"
+version = "0.1.0"
+source = "git+https://github.com/Unrated-Limited-Unlimited/ua-rlib?branch=main#e791200883a6d424e0a73110ab3c3b5b055c7654"
+dependencies = [
+ "eyre",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "ua-test-data"
 version = "0.1.0"
 dependencies = [
@@ -936,6 +946,7 @@ dependencies = [
  "serde",
  "serde_json",
  "tokio",
+ "ua-rlib",
 ]
 
 [[package]]
