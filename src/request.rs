@@ -1,12 +1,12 @@
 use std::future::IntoFuture;
 
-use eyre::{Context, ContextCompat, Result};
+use eyre::{Context, ContextCompat, OptionExt, Result};
 use reqwest::{Client, StatusCode};
 use serde_json::Value;
 
 use crate::utils::{
-    consts::{get_url, WHISKY_PAGE_COUNT},
-    funcs::get_data_url,
+    consts::WHISKY_PAGE_COUNT,
+    funcs::{get_data_url, get_url},
 };
 use ua_rlib::models::{raw_whisky::RawWhisky, whisky::Whiskey};
 
@@ -29,21 +29,29 @@ pub async fn fetch_page(client: &Client, page_nr: u32) -> Result<String> {
 /// }
 /// ```
 pub async fn get_ids(client: &Client, page: u32) -> Result<Vec<String>> {
-    let request = client.get(get_url(page)).build()?;
+    let request = client
+        .get(get_url(page))
+        .build()
+        .wrap_err("Failed building request")?;
+    let response = client
+        .execute(request)
+        .await
+        .wrap_err("Failed executing request")?;
+    let body = response
+        .text()
+        .await
+        .wrap_err("Failed getting response-body")?;
+    let json = serde_json::from_str::<Value>(&body)
+        .wrap_err(format!("Failed getting json from `{body:?}`"))?;
+    let raw_ids = json["productSearchResult"]["products"]
+        .as_array()
+        .ok_or_eyre("Missing field on json")?;
+    let parsed_ids = raw_ids
+        .into_iter()
+        .map(|id| id["code"].to_string().replace("\\", "").replace("\"", ""))
+        .collect::<Vec<String>>();
 
-    serde_json::from_str::<Value>(&client.execute(request).await?.text().await?)
-        .wrap_err("Failed parsing")
-        .and_then(|val| {
-            val["productSearchResult"]["products"]
-                .as_array()
-                .wrap_err("Missing field on json")
-                .and_then(|vec| {
-                    Ok(vec
-                        .into_iter()
-                        .map(|id| id["code"].to_string().replace("\\", "").replace("\"", ""))
-                        .collect::<Vec<String>>())
-                })
-        })
+    Ok(parsed_ids)
 }
 
 pub async fn get_whisky_data(client: &Client, whisky: u32) -> Result<Whiskey> {
@@ -56,8 +64,11 @@ pub async fn get_whisky_data(client: &Client, whisky: u32) -> Result<Whiskey> {
                 .text()
                 .await
                 .wrap_err("Failed getting body")
-                .and_then(|e| serde_json::from_str::<RawWhisky>(&e).wrap_err("Failed parsing json"))
-                .and_then(|rw| Ok(Whiskey::from_raw(rw)))
+                .and_then(|e| {
+                    serde_json::from_str::<Value>(&e)
+                        .wrap_err(format!("Failed parsing json, `{e:?}`"))
+                })
+                .and_then(|rw| Whiskey::from_value(rw))
         }
         Ok(response) => {
             eprintln!("{:?}", response);

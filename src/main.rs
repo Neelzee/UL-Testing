@@ -19,7 +19,7 @@ async fn main() -> Result<()> {
     for w in get_all_whiskies().await? {
         writer.write_all(
             format!(
-                "{};{};{};{};{};{};{};{};{}",
+                "{};{};{};{};{};{};{};{};{}\n",
                 w.id,
                 w.img,
                 w.percentage,

@@ -2,11 +2,16 @@ use eyre::{Context, Error, Result};
 use reqwest::Client;
 use serde_json::Value;
 use std::time::Duration;
+use tokio;
 use tokio::time::sleep;
+use ua_rlib::models::whisky::Whiskey;
 
 use crate::{
     request::{get_ids, get_whisky_data},
-    utils::{consts::TEST_REQUEST_RATE_LIMIT, funcs::get_url},
+    utils::{
+        consts::{TEST_REQUEST_RATE_LIMIT, WHISKY_PAGE_COUNT},
+        funcs::get_url,
+    },
 };
 
 #[tokio::test]
@@ -86,6 +91,21 @@ async fn test_whisky_getter() {
 #[tokio::test]
 async fn test_ids() -> Result<()> {
     let client = Client::default();
+    let mut whiskies: Vec<Result<Whiskey>> = Vec::new();
+    for i in 0..1 {
+        for f in get_ids(&client, i)
+            .await?
+            .into_iter()
+            .filter_map(|id| id.parse::<u32>().ok())
+            .map(|id| get_whisky_data(&client, id))
+        {
+            whiskies.push(f.await);
+        }
+    }
+
+    for w in whiskies {
+        println!("{w:?}");
+    }
 
     Ok(())
 }
