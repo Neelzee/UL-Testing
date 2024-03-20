@@ -1,9 +1,7 @@
-use std::{
-    fs::File,
-    io::{BufWriter, Write},
-};
+use postgres::{Client, NoTls};
+use std::env;
 
-use eyre::Result;
+use eyre::{Context, Result};
 use request::get_all_whiskies;
 
 mod request;
@@ -12,26 +10,27 @@ mod utils;
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<()> {
-    let file = File::create("test.csv")?;
-
-    let mut writer = BufWriter::new(file);
+    let db_password =
+        env::var("DB_PASSWORD").wrap_err("Failed finding enviroment variable `DB_PASSWORD`")?;
+    let mut client = Client::connect(
+        &format!("host=localhost:5432 database=ulu_prod user=ulu_backend password={db_password}"),
+        NoTls,
+    )?;
 
     for w in get_all_whiskies().await? {
-        writer.write_all(
-            format!(
-                "{};{};{};{};{};{};{};{};{}\n",
-                w.id,
-                w.img,
-                w.percentage,
-                w.price,
-                w.rating,
-                w.rating,
-                w.summary,
-                w.title,
-                w.volume
+        client
+            .execute(
+                "INSERT INTO whisky (img, title, price, summary, volume, percentage) VALUES ($1, $2, $3, $4, $5, $6)",
+                &[
+                    &w.img,
+                    &w.title,
+                    &w.price,
+                    &w.summary,
+                    &w.volume,
+                    &(w.percentage as i64),
+                ],
             )
-            .as_bytes(),
-        )?;
+            .wrap_err("Failed writing to db")?;
     }
 
     Ok(())
