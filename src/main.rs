@@ -30,7 +30,7 @@ let (client, connection) =
 
 client
             .execute(
-                "INSERT INTO whiskey (id, img, title, price, summary, volume, percentage) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+                "INSERT INTO whiskey (id, img, title, price, summary, volume, percentage, avg_score) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
                 &[
                     &i,
                     &w.img,
@@ -39,6 +39,7 @@ client
                     &w.summary,
                     &(w.volume as f64),
                     &(w.percentage as f64),
+                    &(0f64)
                 ],
             )
             .await
