@@ -34,10 +34,10 @@ async fn main() -> Result<()> {
                 "INSERT INTO whiskey (id, img, title, price, summary, volume, percentage, avg_score) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
                 &[
                     &i,
-                    &w.img,
-                    &w.title,
+                    &(w.img.replace("\"", "")),
+                    &(w.title.replace("\"", "")),
                     &(w.price as f64),
-                    &w.summary,
+                    &(w.summary.replace("\"", "")),
                     &(w.volume as f64),
                     &(w.percentage as f64),
                     &(0f64)
