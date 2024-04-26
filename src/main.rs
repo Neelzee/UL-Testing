@@ -3,6 +3,7 @@ use eyre::{Context, Result};
 use request::get_all_whiskies;
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
+use serde_json::to_string_pretty;
 use std::env;
 use std::fs::File;
 use std::io::{self, BufReader, BufWriter, Write};
@@ -106,6 +107,15 @@ async fn main() -> Result<()> {
         let mut file = File::create("data.bin")?;
         let buffer = serialize(&viskies)?;
         file.write_all(&buffer)?;
+    }
+
+    if args.contains(&String::from("rec")) {
+        let file = File::create("whiskies.json")?;
+        let mut writer = BufWriter::new(file);
+        let buf = to_string_pretty(&viskies)?;
+        writer.write_all(&mut buf.as_bytes())?;
+
+        return Ok(());
     }
 
     if args.contains(&String::from("db")) {
