@@ -15,10 +15,11 @@ mod test;
 mod utils;
 
 async fn load_test_to_db(viksies: &Vec<Whiskey>) -> Result<()> {
-    let db_password =
+    let DB_PASSWORD =
         env::var("DB_PASSWORD").wrap_err("Failed finding enviroment variable `DB_PASSWORD`")?;
+    let DB_HOST = env::var("DB_HOST").unwrap_or("localhost".to_string());
     let (client, connection) = tokio_postgres::connect(
-        &format!("host=localhost dbname=ulu_prod user=ulu_backend password={db_password}"),
+        &format!("host={DB_HOST} dbname=ulu_prod user=ulu_backend password={DB_PASSWORD}"),
         NoTls,
     )
     .await?;
